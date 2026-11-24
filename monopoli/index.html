@@ -1,0 +1,276 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monopoli Nusantara</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:#f5ecd6;font:20px VT323,Verdana,sans-serif;background:radial-gradient(ellipse at 50% -10%,#5a3c1c,#1a1020 60%,#07050a)}
+h1{font:14px 'Press Start 2P',monospace;margin:0;color:#ffd76a;text-shadow:2px 2px #000}
+.top{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:8px;flex-wrap:wrap}
+.top a{color:#ffd76a;text-decoration:none;border:2px solid #ffd76a;padding:4px 10px;border-radius:8px}
+button{font:inherit;font-size:22px;background:linear-gradient(#ffd76a,#d49a1c);color:#2b1700;border:0;border-radius:10px;padding:6px 16px;cursor:pointer;box-shadow:0 4px 0 #7a4f00;margin:3px}
+button:active{transform:translateY(3px);box-shadow:0 1px 0 #7a4f00}
+.wrap{display:flex;gap:14px;justify-content:center;align-items:flex-start;flex-wrap:wrap;padding:0 10px 90px}
+.top{padding:4px 14px}
+.act{position:sticky;top:6px;z-index:6;background:#2a1c10!important;border-color:#ffd76a!important}
+@media(max-width:1000px){.act{position:fixed;left:6px;right:6px;bottom:6px;top:auto;margin:0;z-index:20}#log{height:90px}}
+.stage{perspective:1500px;width:min(96vw,calc(100vh - 70px),820px);flex:none}
+.board{container-type:inline-size;width:100%;aspect-ratio:1;display:grid;grid-template:1.45fr repeat(9,1fr) 1.45fr/1.45fr repeat(9,1fr) 1.45fr;gap:2px;padding:10px;border-radius:18px;background:linear-gradient(135deg,#8a6a2c,#3a2a10 40%,#a98a3c);box-shadow:0 40px 60px #000a,inset 0 0 0 3px #ffd76a66;transform:rotateX(18deg) scale(.97);transform-origin:50% 60%}
+.tl{position:relative;background:linear-gradient(#f7edd0,#e4d4a6);color:#2a1f0a;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:1.9cqw;line-height:1;overflow:hidden;cursor:pointer;border:1px solid #8a6a2c}
+.tl b{font-weight:400;padding:0 2px}.tl em{font-style:normal;font-size:1.6cqw;opacity:.75;margin-top:2px}
+.bd{position:absolute;background:#999}
+.s-b .bd{left:0;right:0;top:0;height:22%}.s-t .bd{left:0;right:0;bottom:0;height:22%}
+.s-l .bd{top:0;bottom:0;right:0;width:22%}.s-r .bd{top:0;bottom:0;left:0;width:22%}
+.s-b b,.s-b em{margin-top:10%}.s-t{padding-bottom:8%}
+.tl .ic{font-size:4.4cqw;line-height:1.1;filter:drop-shadow(0 .2cqw .2cqw #0006)}.tl .ic.big{font-size:6.4cqw}
+.fx{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);font:3.2cqw 'Press Start 2P';white-space:nowrap;text-shadow:.3cqw .3cqw #000;z-index:8;pointer-events:none;text-align:center;max-width:90%}
+.tk{position:absolute;bottom:1px;left:0;right:0;display:flex;justify-content:center;flex-wrap:wrap;gap:1px;z-index:3}
+.pt{width:3.4cqw;height:3.4cqw;border-radius:50%;display:grid;place-items:center;font-size:2.4cqw;border:1px solid #000;box-shadow:0 2px 3px #0008;background:var(--c)}
+.hs{position:absolute;top:1px;right:2px;font-size:1.8cqw;color:#c00;z-index:3}
+.ctr{grid-area:2/2/11/11;border-radius:12px;background:radial-gradient(circle at 50% 40%,#3d3340,#15101a);box-shadow:inset 0 0 40px #000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2cqw;position:relative}
+.ban{font:900 5.4cqw 'Press Start 2P',monospace;background:linear-gradient(#e53935,#9d1111);padding:1.4cqw 3cqw;border:.4cqw solid #fff;color:#fff;text-shadow:.3cqw .3cqw #000;transform:rotate(-4deg);box-shadow:0 1cqw 2cqw #000a}
+.mas{font-size:12cqw;filter:drop-shadow(0 1cqw 1cqw #000)}
+.decks{display:flex;gap:6cqw}.dk{width:14cqw;height:9cqw;border-radius:1cqw;display:grid;place-items:center;font:1.7cqw 'Press Start 2P';color:#fff;transform:rotate(-6deg);box-shadow:.5cqw .5cqw 0 #0008}
+.dice{display:flex;gap:2cqw;font-size:10cqw;line-height:1;color:#fff}.dice span.r{animation:sh .12s infinite}
+@keyframes sh{50%{transform:rotate(25deg) translateY(-6px)}}
+.panel{width:min(96vw,330px);display:flex;flex-direction:column;gap:8px}
+.card{background:#ffffff12;border:2px solid #ffd76a55;border-radius:12px;padding:8px 10px}
+.pl{display:flex;align-items:center;gap:8px;padding:4px;border-radius:8px}.pl.on{background:#ffd76a33;outline:2px solid #ffd76a}.pl.out{opacity:.35;text-decoration:line-through}
+#log{height:150px;overflow:auto;font-size:18px;color:#cfc3a0}#msg{min-height:60px;font-size:22px}
+dialog,.setup{position:fixed;inset:0;background:#000c;display:grid;place-items:center;z-index:9}
+.box{background:#2a1c10;border:3px solid #ffd76a;border-radius:16px;padding:18px;max-width:92vw;text-align:center}
+select{font:inherit;font-size:20px;margin-left:6px}
+
+.seg{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin:8px 0}.seg button{font-size:18px;padding:5px 10px;opacity:.6}.seg button.on{opacity:1;outline:3px solid #fff}
+.box{max-height:94vh;overflow:auto;width:min(94vw,470px)}.box input{font:inherit;font-size:24px;width:110px;text-align:center;text-transform:uppercase}
+.slot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0;padding:3px 8px;border-radius:8px;background:#ffffff12}
+#info{min-height:26px;margin:6px 0;color:#ffe9a8}.code{font:18px 'Press Start 2P',monospace;color:#7CFC7C;letter-spacing:4px}
+#rb{font-size:17px;border:2px solid #7CFC7C;color:#7CFC7C;padding:3px 8px;border-radius:8px;display:none}
+</style></head><body>
+<div class="top"><h1>MONOPOLI NUSANTARA</h1><span id="rb"></span><a href="../index.html">← Beranda</a></div>
+<div class="wrap"><div class="stage"><div class="board" id="bd"></div></div>
+<div class="panel"><div class="card act"><div id="msg"></div><div id="btns"></div></div><div class="card" id="pls"></div><div class="card" id="log"></div>
+<div class="card" style="font-size:17px">Klik petak milikmu (saat giliranmu) untuk membangun rumah bila sudah memiliki satu set warna penuh.</div></div></div>
+<div class="setup" id="setup"><div class="box"><h1 style="line-height:1.6">MONOPOLI</h1>
+<div class="seg" id="segM"><button data-m="local">👥 1 Perangkat</button><button data-m="host">🌐 Buat Ruang</button><button data-m="join">🔗 Gabung</button></div>
+<div id="netRow" style="display:none">Jaringan: <select id="kind"><option value="inet">Internet (PeerJS)</option><option value="tab">Antar Tab (uji coba)</option></select></div>
+<div id="slotBox"></div><div id="joinBox" style="display:none">Kode ruang: <input id="ci" maxlength="4" placeholder="KODE"> <button id="joinBtn">Gabung</button></div>
+<div id="info"></div><button id="goBtn">Mulai Main</button></div></div>
+<script>
+/* ===== SFX CORE (WebAudio, tanpa file) ===== */
+const SFX=(function(){
+  var ctx=null,mst=null,mg=null,on=true,mus=true,timer=null,nb=null,bigNoise=null;
+  try{on=localStorage.getItem('sfx13')!=='0';mus=localStorage.getItem('mus13')!=='0'}catch(e){}
+  function ac(){
+    if(!ctx){var A=window.AudioContext||window.webkitAudioContext;if(!A)return null;
+      ctx=new A();mst=ctx.createGain();mst.gain.value=.9;mst.connect(ctx.destination);
+      mg=ctx.createGain();mg.gain.value=.5;mg.connect(mst);
+      nb=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);var d=nb.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+    if(ctx.state==='suspended')ctx.resume();return ctx}
+  function tone(f,t0,d,type,v,f2,m){
+    if(m?!mus:!on)return;var c=ac();if(!c)return;var o=c.createOscillator(),g=c.createGain(),t=c.currentTime+(t0||0);
+    o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(Math.max(20,f2),t+d);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v||.1),t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g);g.connect(m?mg:mst);o.start(t);o.stop(t+d+.03)}
+  function noise(t0,d,v,ftype,ff,q,m){
+    if(m?!mus:!on)return;var c=ac();if(!c)return;var s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain(),t=c.currentTime+(t0||0);
+    s.buffer=nb;s.loop=true;f.type=ftype||'bandpass';f.frequency.value=ff||1000;f.Q.value=q||1;
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v||.1),t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    s.connect(f);f.connect(g);g.connect(m?mg:mst);s.start(t,Math.random()*.5);s.stop(t+d+.03)}
+  function music(step,fn){
+    stopMusic();var n=0,next=0;
+    timer=setInterval(function(){if(!mus||!ctx||ctx.state!=='running')return;
+      if(next<ctx.currentTime)next=ctx.currentTime+.05;
+      while(next<ctx.currentTime+.35){fn(n++,next-ctx.currentTime);next+=step}},100)}
+  function stopMusic(){if(timer){clearInterval(timer);timer=null}}
+  function paint(){var a=document.getElementById('sfxB'),b=document.getElementById('musB');if(a){a.textContent=on?'🔊':'🔇'}if(b){b.textContent=mus?'🎵':'🔕'}}
+  function mount(host){
+    host=host||document.querySelector('.top')||document.body;
+    var w=document.createElement('span');w.style.cssText='display:inline-flex;gap:6px;margin-left:6px';
+    w.innerHTML='<button id="sfxB" type="button" title="Efek suara" style="font-size:18px;padding:3px 9px;margin:0">🔊</button><button id="musB" type="button" title="Musik latar" style="font-size:18px;padding:3px 9px;margin:0">🎵</button>';
+    host.appendChild(w);
+    document.getElementById('sfxB').onclick=function(){on=!on;try{localStorage.setItem('sfx13',on?'1':'0')}catch(e){}paint();if(on)tone(660,0,.08,'triangle',.1)};
+    document.getElementById('musB').onclick=function(){mus=!mus;try{localStorage.setItem('mus13',mus?'1':'0')}catch(e){}paint();if(!mus)stopMusic();else if(SFX.onMusic)SFX.onMusic()};
+    paint()}
+  document.addEventListener('pointerdown',function(e){ac();if(on&&e.target.closest&&e.target.closest('button,select,a')&&!e.target.closest('[data-nosfx]'))tone(520,0,.05,'square',.05,380)},true);
+  return{tone:tone,noise:noise,music:music,stopMusic:stopMusic,mount:mount,ac:ac,get on(){return on},get mus(){return mus},onMusic:null}
+})();
+
+const SND={
+ dice(){for(let i=0;i<10;i++)SFX.noise(i*.11,.05,.28,'bandpass',1800+Math.random()*1500,2);SFX.tone(150,1.1,.12,'sine',.3,80);SFX.noise(1.1,.06,.3,'bandpass',900,1)},
+ step(){SFX.tone(420+Math.random()*60,0,.07,'square',.07,300)},
+ land(){SFX.tone(160,0,.12,'sine',.25,90);SFX.noise(0,.06,.2,'lowpass',500,1)},
+ coin(){SFX.tone(1319,0,.07,'square',.09);SFX.tone(1760,.07,.18,'square',.09)},
+ buy(){SND.coin();SFX.tone(1047,.22,.1,'triangle',.12);SFX.tone(1568,.3,.28,'triangle',.12);SFX.noise(.0,.05,.15,'highpass',4000,1)},
+ rent(){[880,740,622,523].forEach((f,i)=>SFX.tone(f,i*.08,.12,'square',.08))},
+ tax(){SFX.tone(220,0,.15,'sawtooth',.1,150);SFX.tone(165,.14,.25,'sawtooth',.1,100)},
+ jail(){for(let i=0;i<4;i++){SFX.tone(740,i*.22,.1,'square',.1,990);SFX.tone(990,i*.22+.1,.1,'square',.1,740)}SFX.noise(.9,.2,.35,'lowpass',400,1);SFX.tone(90,.9,.3,'sine',.35,50)},
+ card(){SFX.noise(0,.14,.25,'highpass',3000,.8);SFX.tone(660,.14,.1,'triangle',.1);SFX.tone(880,.22,.15,'triangle',.1)},
+ build(){for(let i=0;i<3;i++){SFX.noise(i*.16,.05,.4,'bandpass',900,2);SFX.tone(200,i*.16,.07,'square',.12,120)}SFX.tone(784,.55,.2,'triangle',.12)},
+ bankrupt(){[330,294,262,196].forEach((f,i)=>SFX.tone(f,i*.28,.4,'sawtooth',.1,f*.9))},
+ turn(){SFX.tone(988,0,.18,'sine',.14);SFX.tone(1319,.14,.35,'sine',.12)},
+ go(){[523,659,784,1047].forEach((f,i)=>SFX.tone(f,i*.07,.14,'square',.08))},
+ win(){[523,659,784,1047,784,1047,1319].forEach((f,i)=>{SFX.tone(f,i*.15,.3,'triangle',.16);SFX.tone(f/2,i*.15,.3,'square',.05)})},
+ join(){SFX.tone(660,0,.1,'triangle',.12);SFX.tone(990,.1,.2,'triangle',.12)}};
+/* musik latar: gamelan pentatonik (nuansa Nusantara) */
+const PL=[0,2,5,7,9];
+SFX.onMusic=()=>SFX.music(.38,(n,t)=>{const fr=s=>261.63*Math.pow(2,s/12),pat=[0,2,1,3,2,4,3,1,0,2,4,3,2,1,0,-1],k=n%16,bar=Math.floor(n/16)%4,deg=pat[k]+bar%2*2;
+ if(k%2==0){const note=PL[((deg%5)+5)%5]+12*Math.floor(deg/5);SFX.tone(fr(note),t,.55,'sine',.09,0,1);SFX.tone(fr(note)*2.76,t,.18,'sine',.03,0,1)}
+ if(k==0){SFX.tone(fr(-24+PL[bar%5]),t,2.2,'sine',.14,0,1);SFX.tone(fr(-24+PL[bar%5])*1.5,t,1.4,'sine',.04,0,1)}
+ if(k==8)SFX.tone(fr(-12),t,.8,'triangle',.06,0,1);
+ if(k%4==2)SFX.noise(t,.04,.05,'bandpass',2500,3,1)});
+
+const COL=['#8d5a2b','#8fd3f4','#e0559b','#f59e0b','#e53935','#facc15','#22a050','#1d4ed8'];
+const raw="START|s|0;Medan|p|60|0;Dana Umum|c;Palembang|p|60|0;Pajak Penghasilan|x|200;Stasiun Gambir|r|200;Padang|p|100|1;Kesempatan|h;Pekanbaru|p|100|1;Jambi|p|120|1;PENJARA|j;Bandung|p|140|2;PLN|u|150;Bogor|p|140|2;Cirebon|p|160|2;Stasiun Bandung|r|200;Semarang|p|180|3;Dana Umum|c;Solo|p|180|3;Yogyakarta|p|200|3;Parkir Bebas|f;Surabaya|p|220|4;Kesempatan|h;Malang|p|220|4;Kediri|p|240|4;Stasiun Surabaya|r|200;Denpasar|p|260|5;Mataram|p|260|5;PDAM|u|150;Kupang|p|280|5;Masuk Penjara|g;Makassar|p|300|6;Manado|p|300|6;Dana Umum|c;Palu|p|320|6;Stasiun Senen|r|200;Kesempatan|h;Balikpapan|p|350|7;Pajak Mewah|x|100;Jakarta|p|400|7";
+const T=raw.split(';').map(s=>{const a=s.split('|');return{n:a[0],t:a[1],price:+a[2]||0,g:a[3]===undefined?-1:+a[3]}});
+const ICONS=['🏁','🕌','📦','🌉','💍','🚆','🏠','❓','🛢️','🏯','🔒','🌋','⚡','🌿','🏰','🚆','🏛️','📦','👘','🛕','🚗','🦈','❓','🍎','🌾','🚆','🌺','⛰️','🚰','🐉','👮','⛵','🐠','📦','🌉','🚆','❓','🦧','💎','🗼'];
+const IC={s:'⬅️',c:'📦',h:'❓',x:'💍',r:'🚆',u:'💡',j:'🚔',f:'🅿️',g:'👮'};
+const CARDS=[["Menang lomba padi! Terima 100 jt",100],["Bayar pupuk 50 jt",-50],["Warisan! Terima 150 jt",150],["Biaya dokter, bayar 100 jt",-100],["Maju ke START, terima 200 jt","go"],["Masuk penjara!","jail"],["Ulang tahun! Terima 30 jt dari tiap pemain","bd"],["Mundur 3 petak","b3"]];
+const TOK=['🎩','🚗','🐕','🚢'],PC=['#e53935','#1d4ed8','#22a050','#a855f7'];
+const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms)),rnd=n=>Math.floor(Math.random()*n);
+function xy(i){if(i<=10)return[11-i,11];if(i<=20)return[1,21-i];if(i<=30)return[i-19,1];return[11,i-29]}
+const bd=$('bd');
+T.forEach((t,i)=>{const[c,r]=xy(i),d=document.createElement('div');
+ const side=r==11?'b':r==1?'t':c==1?'l':'r';d.className='tl s-'+side;d.style.gridArea=r+'/'+c;
+ d.innerHTML=(t.t=='p'?`<i class="bd" style="background:${COL[t.g]}"></i>`:'')+`<b>${t.n}</b>`+`<span class="ic${i%10==0?' big':''}">${ICONS[i]}</span>`+(t.price?`<em>${t.price} jt</em>`:'')+'<span class="hs"></span><span class="tk"></span>';
+ d.onclick=()=>build(i);d.id='t'+i;bd.appendChild(d)});
+bd.insertAdjacentHTML('beforeend',`<div class="ctr"><div class="mas">🎩</div><div class="ban">MONOPOLI</div><div class="decks"><div class="dk" style="background:#2563eb">DANA UMUM</div><div class="dk" style="background:#f97316">KESEMPATAN</div></div><div class="dice" id="dice"><span>⚀</span><span>⚁</span></div></div>`);
+let P=[],cur=0,own={},humanTurn=false,role='local',me=-1,mySlot=-1,pend=null,started=false;
+const NET={kind:'inet',code:'',links:[],peer:null,ch:null,send:null,joined:false,lobby:null,tok:0};
+const cfg={local:['human','bot','none','none'],host:['human','net','none','none']};let setupMode='local';
+(function(){const d=Object.getOwnPropertyDescriptor(Node.prototype,'textContent'),m=$('msg');Object.defineProperty(m,'textContent',{get(){return d.get.call(this)},set(v){d.set.call(this,v);if(role==='host')bc({t:'msg',s:v})}})})();
+function bc(m){if(role!=='host')return;NET.links.forEach(l=>{try{l.send(m)}catch(e){}})}
+function addLog(s){const l=$('log');l.innerHTML=s+'<br>'+l.innerHTML}
+function log(s){addLog(s);bc({t:'log',s})}
+function snd(n){SND[n]&&SND[n]();bc({t:'snd',n})}
+function cnt(pi,t){return T.reduce((a,x,i)=>a+((x.t==t&&own[i]&&own[i].p==pi)?1:0),0)}
+function full(pi,g){return T.every((x,i)=>x.g!=g||(own[i]&&own[i].p==pi))}
+function rent(i,roll){const t=T[i],o=own[i];
+ if(t.t=='r')return 25*2**(cnt(o.p,'r')-1);
+ if(t.t=='u')return roll*(cnt(o.p,'u')==2?10:4);
+ const b=Math.round(t.price/10);return o.h?b*[1,3,6,10,14,18][o.h]:(full(o.p,t.g)?b*2:b)}
+function draw(){T.forEach((t,i)=>{const e=$('t'+i),o=own[i];
+  e.querySelector('.tk').innerHTML=P.filter(p=>!p.out&&p.pos==i).map(p=>`<span class="pt" data-p="${p.i}" style="--c:${PC[p.i]}">${TOK[p.i]}</span>`).join('');
+  e.style.boxShadow=o?`inset 0 0 0 .6cqw ${PC[P[o.p].i]}`:'';e.querySelector('.hs').textContent=o&&o.h?(o.h==5?'🏨':'🏠'.repeat(o.h)):''});
+ $('pls').innerHTML=P.map((p,k)=>`<div class="pl ${k==cur?'on':''} ${p.out?'out':''}"><span class="pt" style="--c:${PC[p.i]};width:30px;height:30px;font-size:20px">${TOK[p.i]}</span><b style="flex:1">${p.n}${k==me&&role==='guest'?' (kamu)':''}</b>${p.cash} jt</div>`).join('');
+ bc({t:'state',P,own,cur})}
+function paint(msg,opts,can,pick){$('msg').textContent=msg;$('btns').innerHTML='';if(!can)return;opts.forEach((o,k)=>{const b=document.createElement('button');b.textContent=o;b.onclick=()=>pick(k);$('btns').appendChild(b)})}
+function choose(msg,opts,pi){const p=P[pi],remote=!!p&&p.r==='remote';
+ return new Promise(res=>{const fin=k=>{if(!pend)return;pend=null;$('btns').innerHTML='';bc({t:'noprompt'});res(k)};
+  pend={pi,fin,n:opts.length};bc({t:'prompt',pl:pi,msg,opts});paint(msg,opts,!remote,fin)})}
+function build(i,who){if(role==='guest'){if(started)NET.send({t:'build',i});return}
+ const net=who!==undefined,pi=net?who:cur;if(!humanTurn||pi!==cur)return;if(!net&&P[cur].r==='remote')return;
+ const p=P[pi],o=own[i],t=T[i];
+ if(!o||o.p!=pi||t.t!='p'||!full(pi,t.g)||o.h>=5)return;const c=Math.round(t.price/2);
+ if(p.cash<c)return log('Uang kurang untuk membangun.');p.cash-=c;o.h++;log(`${p.n} membangun di ${t.n} (-${c} jt)`);fx('🏠 Rumah dibangun','#7CFC7C');snd('build');flash(i);draw()}
+function fxL(txt,col){const e=document.createElement('div');e.className='fx';e.style.color=col||'#ffe27a';e.textContent=txt;document.querySelector('.ctr').appendChild(e);e.animate([{opacity:0,transform:'translate(-50%,-20%) scale(.6)'},{opacity:1,transform:'translate(-50%,-60%) scale(1.1)',offset:.25},{opacity:1,transform:'translate(-50%,-90%) scale(1)',offset:.75},{opacity:0,transform:'translate(-50%,-140%) scale(1)'}],{duration:2400,easing:'ease-out'}).onfinish=()=>e.remove()}
+function fx(txt,col){fxL(txt,col);bc({t:'fx',txt,col})}
+function flashL(i){$('t'+i).animate([{filter:'brightness(1.9)',transform:'scale(1.15)'},{filter:'brightness(1)',transform:'scale(1)'}],{duration:800,easing:'ease-out'})}
+function flash(i){flashL(i);bc({t:'flash',i})}
+const FACE='⚀⚁⚂⚃⚄⚅';
+function diceL(x,y,cls){const ds=$('dice').children;ds[0].textContent=x;ds[1].textContent=y;ds[0].className=ds[1].className=cls||''}
+function dice(x,y,cls){diceL(x,y,cls);bc({t:'dice',x,y,cls})}
+function dpopL(){[...$('dice').children].forEach(d=>d.animate([{transform:'scale(1.6) rotate(-20deg)'},{transform:'scale(1) rotate(0)'}],{duration:500,easing:'ease-out'}))}
+function dpop(){dpopL();bc({t:'dpop'})}
+async function steps(p,n){for(let k=0;k<n;k++){p.pos=(p.pos+1)%40;if(p.pos==0){p.cash+=200;log(`${p.n} melewati START +200 jt`);fx('+200 jt','#7CFC7C');snd('go')}draw();snd('step');const e=document.querySelector(`#t${p.pos} .pt[data-p="${p.i}"]`);e&&e.animate([{transform:'translateY(0)'},{transform:'translateY(-2.2cqw) scale(1.25)'},{transform:'translateY(0)'}],{duration:320,easing:'ease-out'});flash(p.pos);await sleep(380)}snd('land')}
+function pay(p,amt,to){p.cash-=amt;if(to!=null)P[to].cash+=amt}
+function bankrupt(){P.forEach(p=>{if(!p.out&&p.cash<0){p.out=1;log(`💥 ${p.n} bangkrut!`);snd('bankrupt');for(const k in own)if(own[k].p==P.indexOf(p))delete own[k]}})}
+async function land(p,r){const i=p.pos,t=T[i],mi=P.indexOf(p);log(`${p.n} → ${t.n}`);
+ if('pru'.includes(t.t)){const o=own[i];
+  if(!o){if(p.cash>=t.price){const y=p.bot?p.cash>t.price+250:!(await choose(`Beli ${t.n} seharga ${t.price} jt?`,['Beli','Lewati'],mi));if(y){p.cash-=t.price;own[i]={p:mi,h:0};log(`${p.n} membeli ${t.n}`);fx(ICONS[i]+' '+t.n+' dibeli!','#7CFC7C');flash(i);snd('buy')}}}
+  else if(o.p!=mi){const m=rent(i,r);pay(p,m,o.p);log(`${p.n} bayar sewa ${m} jt ke ${P[o.p].n}`);fx('Sewa -'+m+' jt','#ff7b7b');snd('rent')}}
+ else if(t.t=='x'){pay(p,t.price);log(`Bayar pajak ${t.price} jt`);fx('Pajak -'+t.price+' jt','#ff7b7b');snd('tax')}
+ else if(t.t=='g'){p.pos=10;p.jail=1;log('👮 Masuk penjara!');fx('🔒 MASUK PENJARA!','#ff7b7b');snd('jail');flash(10)}
+ else if(t.t=='c'||t.t=='h'){const c=CARDS[rnd(CARDS.length)];log('🃏 '+c[0]);snd('card');$('msg').textContent=c[0];fx((t.t=='c'?'📦 ':'❓ ')+c[0],'#fff');await sleep(p.bot?2200:3000);
+  if(typeof c[1]=='number'){p.cash+=c[1];snd(c[1]>0?'coin':'rent')}else if(c[1]=='go'){p.pos=0;p.cash+=200;snd('go')}else if(c[1]=='jail'){p.pos=10;p.jail=1;snd('jail')}
+  else if(c[1]=='bd'){P.forEach(q=>{if(q!=p&&!q.out){q.cash-=30;p.cash+=30}});snd('coin')}else{p.pos-=3;draw();snd('step');await land(p,r)}}}
+function botBuild(p){const me2=P.indexOf(p);for(let k=0;k<T.length;k++){const o=own[k],t=T[k];if(o&&o.p==me2&&t.t=='p'&&o.h<5&&full(me2,t.g)&&p.cash>Math.round(t.price/2)+300){p.cash-=Math.round(t.price/2);o.h++;log(`${p.n} membangun di ${t.n}`);snd('build');return}}}
+async function play(){draw();
+ while(P.filter(p=>!p.out).length>1){const p=P[cur];
+  if(p.out){cur=(cur+1)%P.length;continue}
+  draw();
+  if(p.jail){p.jail=0;p.cash-=50;log(`${p.n} bayar 50 jt keluar penjara`);snd('rent');$('msg').textContent=p.n+' keluar penjara (-50 jt)';await sleep(1200);bankrupt();cur=(cur+1)%P.length;continue}
+  humanTurn=false;
+  if(p.bot){$('msg').textContent='Giliran '+p.n;await sleep(1500)}else{humanTurn=true;snd('turn');await choose('Giliran '+p.n,['🎲 Lempar dadu'],cur);humanTurn=false}
+  snd('dice');for(let k=0;k<10;k++){dice(FACE[rnd(6)],FACE[rnd(6)],'r');await sleep(110)}
+  const a=1+rnd(6),b=1+rnd(6);dice(FACE[a-1],FACE[b-1],'');dpop();
+  log(`${p.n} melempar ${a}+${b}`);await sleep(500);await steps(p,a+b);await sleep(600);await land(p,a+b);bankrupt();draw();await sleep(900);
+  if(!p.out){if(p.bot){botBuild(p);await sleep(900)}else{humanTurn=true;await choose('Total '+(a+b)+'. Bangun rumah / akhiri giliran.',['Akhiri giliran'],cur);humanTurn=false}}
+  draw();if(!(a==b&&!p.out&&!p.jail))cur=(cur+1)%P.length}
+ const w=P.find(p=>!p.out);draw();$('btns').innerHTML='';snd('win');const s='🏆 '+w.n+' menjadi juragan Nusantara!';bc({t:'end',s});
+ await choose(s,['Main lagi'],Math.max(0,P.findIndex(q=>q.r==='local')));location.reload()}
+
+/* ================= LOBI & JARINGAN ================= */
+function loadPeer(){return new Promise((ok,no)=>{if(window.Peer)return ok();const s=document.createElement('script');s.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';s.onload=ok;s.onerror=()=>no(new Error('offline'));document.head.appendChild(s)})}
+function rcode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ';return Array.from({length:4},()=>A[rnd(A.length)]).join('')}
+function setInfo(h){$('info').innerHTML=h}
+function closeNet(){NET.tok++;try{NET.peer&&NET.peer.destroy()}catch(e){}try{NET.ch&&NET.ch.close()}catch(e){}NET.peer=NET.ch=NET.send=null;NET.links=[];NET.joined=false;NET.lobby=null;role='local'}
+function mkLink(f){return{send:f,slot:null,pi:null}}
+function lobbyBroadcast(){bc({t:'lobby',slots:cfg.host.map((t,i)=>({t,f:i==0||NET.links.some(l=>l.slot===i)}))})}
+function acceptLink(l){if(started){l.send({t:'full'});return}
+ if(l.slot==null){const used=NET.links.map(x=>x.slot),k=cfg.host.findIndex((t,i)=>i>0&&t==='net'&&!used.includes(i));if(k<0){l.send({t:'full'});return}l.slot=k;NET.links.push(l);SND.join()}
+ l.send({t:'welcome',slot:l.slot});lobbyBroadcast();renderSetup()}
+function linkDown(l){const ix=NET.links.indexOf(l);if(ix<0)return;NET.links.splice(ix,1);
+ if(!started){lobbyBroadcast();renderSetup();return}
+ const p=P[l.pi];if(p&&!p.out){p.r='bot';p.bot=true;p.n=p.n.replace(' 🌐','')+' (Bot)';log(`${p.n} terputus, digantikan Bot`);if(pend&&pend.pi===l.pi)pend.fin(pend.n-1);draw()}}
+function onGuest(l,m){if(m.t==='choice'){if(pend&&l.pi!=null&&pend.pi===l.pi)pend.fin(m.k)}else if(m.t==='build'){if(humanTurn&&l.pi===cur)build(m.i,l.pi)}else if(m.t==='bye')linkDown(l)}
+function openHost(){role='host';const tok=++NET.tok;NET.code=rcode();NET.links=[];
+ const url=location.href.split('#')[0]+'#'+NET.code+(NET.kind==='tab'?'-T':'');
+ const ready=()=>{try{navigator.clipboard.writeText(url).catch(()=>{})}catch(e){}setInfo(`Kode ruang: <span class="code">${NET.code}</span><br><small>Tautan undangan sudah disalin. Teman buka tautan itu, atau pilih "Gabung" dan isi kode. Slot "Teman" yang kosong dimainkan Bot.</small>`);renderSetup()};
+ if(NET.kind==='tab'){const ch=NET.ch=new BroadcastChannel('mono13-'+NET.code),L={};
+  ch.onmessage=e=>{const m=e.data;if(!m||m.to!=='host')return;if(m.t==='hello'){L[m.from]=L[m.from]||mkLink(x=>ch.postMessage(Object.assign({},x,{to:m.from})));acceptLink(L[m.from])}else if(L[m.from])onGuest(L[m.from],m)};ready()}
+ else{setInfo('Menyiapkan ruang…');loadPeer().then(()=>{if(tok!==NET.tok)return;const pr=NET.peer=new Peer('mono13-'+NET.code);
+  pr.on('open',ready);pr.on('connection',c=>{const l=mkLink(x=>{if(c.open)c.send(x)});c.on('data',m=>{if(m.t==='hello')acceptLink(l);else onGuest(l,m)});c.on('close',()=>linkDown(l))});
+  pr.on('error',er=>setInfo('Gagal: '+er.type+(er.type==='unavailable-id'?' — kode terpakai, pilih ulang "Buat Ruang".':'')))}).catch(()=>setInfo('Butuh internet untuk mode online. Untuk uji coba satu perangkat pilih "Antar Tab".'))}}
+function joinRoom(){const c=$('ci').value.toUpperCase().trim();if(c.length<4)return setInfo('Masukkan 4 huruf kode ruang.');
+ NET.code=c;NET.kind=$('kind').value;role='guest';setInfo('Menyambung…');const tok=++NET.tok;
+ const fail=()=>{if(!NET.joined&&tok===NET.tok)setInfo('Ruang tidak ditemukan. Pastikan host sudah membuat ruang dan kodenya benar.')};
+ if(NET.kind==='tab'){const gid='g'+Math.random().toString(36).slice(2,8),ch=NET.ch=new BroadcastChannel('mono13-'+c);
+  NET.send=x=>ch.postMessage(Object.assign({},x,{from:gid,to:'host'}));ch.onmessage=e=>{const m=e.data;if(m&&m.to===gid)onHost(m)};NET.send({t:'hello'});setTimeout(fail,3000)}
+ else loadPeer().then(()=>{if(tok!==NET.tok)return;const pr=NET.peer=new Peer();
+  pr.on('open',()=>{const cn=pr.connect('mono13-'+c,{reliable:true});NET.send=x=>{if(cn.open)cn.send(x)};cn.on('open',()=>NET.send({t:'hello'}));cn.on('data',onHost);cn.on('close',()=>{addLog('⚠️ Koneksi ke host terputus.');if(!started)setInfo('Koneksi terputus.')})});
+  pr.on('error',er=>setInfo('Gagal: '+er.type));setTimeout(fail,9000)}).catch(()=>setInfo('Butuh internet untuk mode online.'))}
+function showRb(){const r=$('rb');r.style.display='inline-block';r.textContent='Ruang '+NET.code}
+function onHost(m){switch(m.t){
+ case 'welcome':NET.joined=true;mySlot=m.slot;$('joinBox').style.display='none';setInfo('✅ Terhubung ke ruang <b>'+NET.code+'</b>. Menunggu host memulai…');SND.join();renderSetup();break;
+ case 'full':NET.joined=false;setInfo('Ruang penuh atau permainan sudah dimulai.');break;
+ case 'lobby':NET.lobby=m.slots;renderSetup();break;
+ case 'start':started=true;me=m.you;$('setup').style.display='none';showRb();if(SFX.mus)SFX.onMusic();break;
+ case 'state':P=m.P;own=m.own;cur=m.cur;draw();break;
+ case 'log':addLog(m.s);break;
+ case 'msg':$('msg').textContent=m.s;break;
+ case 'prompt':paint(m.msg,m.opts,m.pl===me,k=>{$('btns').innerHTML='';NET.send({t:'choice',k})});break;
+ case 'noprompt':$('btns').innerHTML='';break;
+ case 'fx':fxL(m.txt,m.col);break;case 'flash':flashL(m.i);break;case 'snd':SND[m.n]&&SND[m.n]();break;
+ case 'dice':diceL(m.x,m.y,m.cls);break;case 'dpop':dpopL();break;
+ case 'end':$('btns').innerHTML='<button onclick="location.reload()">Main lagi</button>';$('msg').textContent=m.s;break}}
+function renderSetup(){
+ document.querySelectorAll('#segM button').forEach(b=>b.classList.toggle('on',b.dataset.m===setupMode));
+ $('netRow').style.display=setupMode==='local'?'none':'block';
+ $('joinBox').style.display=setupMode==='join'&&!NET.joined?'block':'none';
+ $('goBtn').style.display=setupMode==='join'?'none':'inline-block';
+ const box=$('slotBox');
+ if(setupMode==='join'){box.innerHTML=NET.lobby?'<p>Pemain di ruang:</p>'+NET.lobby.map((s,i)=>`<div class="slot"><span>${TOK[i]} Pemain ${i+1}${i===mySlot?' (kamu)':''}</span><b>${s.t==='human'?'Host':s.t==='net'?(s.f?'Teman ✅':'menunggu…'):s.t==='bot'?'Bot':'—'}</b></div>`).join(''):'';return}
+ const opts=setupMode==='local'?[['human','Manusia'],['bot','Bot'],['none','Tidak ada']]:[['net','Teman (online)'],['bot','Bot'],['none','Tidak ada']];
+ box.innerHTML=[0,1,2,3].map(i=>{const v=cfg[setupMode][i],filled=setupMode==='host'&&NET.links.some(l=>l.slot===i);
+  if(setupMode==='host'&&i==0)return `<div class="slot"><span>${TOK[0]} Pemain 1</span><b>Kamu (host)</b></div>`;
+  const o=opts.filter(x=>!(i<=1&&x[0]==='none'&&setupMode==='local')&&!(i==1&&x[0]==='none'&&false)).filter(x=>!(setupMode==='local'&&i==0&&x[0]==='none')).map(x=>`<option value="${x[0]}"${x[0]===v?' selected':''}>${x[1]}</option>`).join('');
+  return `<div class="slot"><span>${TOK[i]} Pemain ${i+1}</span><span><select data-i="${i}"${filled?' disabled':''}>${o}</select>${filled?' ✅':''}</span></div>`}).join('');
+ box.querySelectorAll('select').forEach(s=>s.onchange=()=>{cfg[setupMode][+s.dataset.i]=s.value;if(setupMode==='host')lobbyBroadcast();renderSetup()})}
+function setMode(m){if(m===setupMode&&!(m==='join'&&NET.joined))return;closeNet();setupMode=m;NET.kind=$('kind').value;if(m==='host')openHost();else setInfo('');renderSetup()}
+function start(){const list=[];
+ if(setupMode==='join')return;
+ if(setupMode==='local')cfg.local.forEach((t,i)=>{if(t!=='none')list.push({i,r:t==='bot'?'bot':'local'})});
+ else cfg.host.forEach((t,i)=>{if(t==='none')return;if(i==0)list.push({i,r:'local'});else if(t==='bot')list.push({i,r:'bot'});else{const l=NET.links.find(x=>x.slot===i);list.push({i,r:l?'remote':'bot',l})}});
+ if(list.length<2)return setInfo('Minimal 2 pemain.');
+ P=list.map(x=>({n:TOK[x.i]+(x.i+1)+(x.r==='bot'?' Bot':x.r==='remote'?' 🌐':''),i:x.i,pos:0,cash:1500,jail:0,out:0,bot:x.r==='bot',r:x.r}));
+ list.forEach((x,k)=>{if(x.l)x.l.pi=k});started=true;$('setup').style.display='none';
+ if(setupMode==='host'){showRb();NET.links.forEach(l=>l.send({t:'start',you:l.pi}))}
+ if(SFX.mus)SFX.onMusic();SND.go();play()}
+$('segM').onclick=e=>{const b=e.target.closest('button');if(b)setMode(b.dataset.m)};
+$('kind').onchange=()=>{NET.kind=$('kind').value;if(setupMode==='host'){closeNet();openHost()}renderSetup()};
+$('goBtn').onclick=start;$('joinBtn').onclick=joinRoom;
+addEventListener('pagehide',()=>{if(role==='guest'&&NET.send)try{NET.send({t:'bye'})}catch(e){}});
+SFX.mount(document.querySelector('.top'));renderSetup();
+{const h=location.hash.slice(1).toUpperCase();if(/^[A-Z]{4}(-T)?$/.test(h)){setupMode='join';$('kind').value=h.endsWith('-T')?'tab':'inet';$('ci').value=h.slice(0,4);renderSetup();setTimeout(joinRoom,300)}}
+
+</script></body></html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tarik Tambang Kuis Statistik</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font:22px VT323,monospace;color:#fff;background:linear-gradient(#7ec8ff,#bfe8ff 45%,#5db04b 45%,#2f7d32)}
+h1{font:14px 'Press Start 2P';margin:0;text-shadow:2px 2px #1b4d1b}
+.top{display:flex;justify-content:space-between;align-items:center;padding:10px 14px}.top a{color:#fff;border:2px solid #fff;padding:3px 10px;border-radius:8px;text-decoration:none;background:#0004}
+button{font:inherit;font-size:22px;border:0;border-radius:10px;padding:8px 14px;background:linear-gradient(#ffe27a,#f2a900);color:#3a2300;cursor:pointer;box-shadow:0 4px 0 #8a5a00;margin:3px}button:active{transform:translateY(3px)}button:disabled{filter:grayscale(1);opacity:.5}
+.menu,.lobby{max-width:520px;margin:20px auto;background:#14301cdd;border:3px solid #fff;border-radius:16px;padding:16px;text-align:center}
+.menu button{display:block;width:100%}input,select{font:inherit;font-size:24px;padding:4px 8px;text-transform:uppercase;width:120px;text-align:center}
+#game{display:none;max-width:900px;margin:0 auto;padding:0 10px 20px}
+.field{position:relative;height:150px;margin:6px 0}
+.rope{position:absolute;left:3%;right:3%;top:78px;height:10px;background:repeating-linear-gradient(90deg,#c8923b 0 10px,#8a5a1a 10px 14px);border-radius:5px;box-shadow:0 3px 0 #0005}
+.mid{position:absolute;left:50%;top:20px;bottom:0;border-left:3px dashed #fff8}.win{position:absolute;top:20px;bottom:0;width:3px;background:#ffeb3b}
+.flag{position:absolute;top:56px;left:50%;font-size:40px;transform:translateX(-50%);transition:left .7s cubic-bezier(.3,1.6,.5,1)}
+.tm{position:absolute;top:30px;font-size:46px;transition:left .7s cubic-bezier(.3,1.6,.5,1);white-space:nowrap}
+.q{background:#fffdf0;color:#222;border:4px solid #3a2300;border-radius:14px;padding:12px 14px;text-align:center;font-size:26px;min-height:96px}
+.q small{display:block;font:10px 'Press Start 2P';color:#a35;margin-bottom:6px}
+.bar{height:8px;background:#0005;border-radius:4px;margin:6px 0}.bar i{display:block;height:100%;background:#ffe27a;width:100%}
+.pans{display:flex;gap:10px}.pan{flex:1;border:3px solid #fff;border-radius:14px;padding:6px;background:#0005}.pan h3{margin:2px;font:10px 'Press Start 2P';text-align:center}
+.pan button{display:block;width:100%;font-size:21px;text-align:left}.A h3{color:#8dff8d}.B h3{color:#ff9a9a}
+#msg{text-align:center;min-height:30px;text-shadow:1px 1px #000}
+@media(max-width:600px){.pans{flex-direction:column}}
+</style></head><body>
+<div class="top"><h1>TARIK TAMBANG KUIS</h1><a href="../index.html">← Beranda</a></div>
+<div class="menu" id="menu"><h1 style="line-height:1.6">Jawab cepat &amp; tepat untuk menarik tali!</h1><p>RAL · RAK · Pengacakan · Genetika · Pemuliaan · Rancangan Percobaan (mudah → sulit)</p>
+<button onclick="go('bot')">🤖 Solo lawan Bot</button><button onclick="go('local')">👥 2 Tim, 1 Layar (split)</button>
+<button onclick="host('peer')">🌐 Online: Buat Ruang</button><button onclick="joinUI('peer')">🌐 Online: Gabung</button>
+<button onclick="host('tab')">🗂️ Antar Tab: Buat Ruang</button><button onclick="joinUI('tab')">🗂️ Antar Tab: Gabung</button>
+<div>Level bot: <select id="lv" style="width:auto"><option value="0">Mudah</option><option value="1" selected>Sedang</option><option value="2">Sulit</option></select></div></div>
+<div class="lobby" id="lobby" style="display:none"><h1 id="lt"></h1><p id="lc"></p><div id="lj"></div><button id="sb" style="display:none" onclick="H.start()">▶ Mulai</button></div>
+<div id="game"><div class="field"><div class="mid"></div><div class="win" style="left:3%"></div><div class="win" style="right:3%"></div><div class="rope"></div><div class="tm" id="ta">🧑‍🌾🧑‍🌾</div><div class="tm" id="tb">🐛🐛</div><div class="flag" id="fl">🚩</div></div>
+<div id="sc" style="display:flex;justify-content:space-between;font:11px 'Press Start 2P';margin:4px 2px"></div><div class="q" id="q"></div><div class="bar"><i id="tm"></i></div><div id="msg"></div><div class="pans" id="pans"></div></div>
+<script>
+/* ===== SFX CORE (WebAudio, tanpa file) ===== */
+const SFX=(function(){
+  var ctx=null,mst=null,mg=null,on=true,mus=true,timer=null,nb=null,bigNoise=null;
+  try{on=localStorage.getItem('sfx13')!=='0';mus=localStorage.getItem('mus13')!=='0'}catch(e){}
+  function ac(){
+    if(!ctx){var A=window.AudioContext||window.webkitAudioContext;if(!A)return null;
+      ctx=new A();mst=ctx.createGain();mst.gain.value=.9;mst.connect(ctx.destination);
+      mg=ctx.createGain();mg.gain.value=.5;mg.connect(mst);
+      nb=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);var d=nb.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+    if(ctx.state==='suspended')ctx.resume();return ctx}
+  function tone(f,t0,d,type,v,f2,m){
+    if(m?!mus:!on)return;var c=ac();if(!c)return;var o=c.createOscillator(),g=c.createGain(),t=c.currentTime+(t0||0);
+    o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(Math.max(20,f2),t+d);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v||.1),t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g);g.connect(m?mg:mst);o.start(t);o.stop(t+d+.03)}
+  function noise(t0,d,v,ftype,ff,q,m){
+    if(m?!mus:!on)return;var c=ac();if(!c)return;var s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain(),t=c.currentTime+(t0||0);
+    s.buffer=nb;s.loop=true;f.type=ftype||'bandpass';f.frequency.value=ff||1000;f.Q.value=q||1;
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,v||.1),t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    s.connect(f);f.connect(g);g.connect(m?mg:mst);s.start(t,Math.random()*.5);s.stop(t+d+.03)}
+  function music(step,fn){
+    stopMusic();var n=0,next=0;
+    timer=setInterval(function(){if(!mus||!ctx||ctx.state!=='running')return;
+      if(next<ctx.currentTime)next=ctx.currentTime+.05;
+      while(next<ctx.currentTime+.35){fn(n++,next-ctx.currentTime);next+=step}},100)}
+  function stopMusic(){if(timer){clearInterval(timer);timer=null}}
+  function paint(){var a=document.getElementById('sfxB'),b=document.getElementById('musB');if(a){a.textContent=on?'🔊':'🔇'}if(b){b.textContent=mus?'🎵':'🔕'}}
+  function mount(host){
+    host=host||document.querySelector('.top')||document.body;
+    var w=document.createElement('span');w.style.cssText='display:inline-flex;gap:6px;margin-left:6px';
+    w.innerHTML='<button id="sfxB" type="button" title="Efek suara" style="font-size:18px;padding:3px 9px;margin:0">🔊</button><button id="musB" type="button" title="Musik latar" style="font-size:18px;padding:3px 9px;margin:0">🎵</button>';
+    host.appendChild(w);
+    document.getElementById('sfxB').onclick=function(){on=!on;try{localStorage.setItem('sfx13',on?'1':'0')}catch(e){}paint();if(on)tone(660,0,.08,'triangle',.1)};
+    document.getElementById('musB').onclick=function(){mus=!mus;try{localStorage.setItem('mus13',mus?'1':'0')}catch(e){}paint();if(!mus)stopMusic();else if(SFX.onMusic)SFX.onMusic()};
+    paint()}
+  document.addEventListener('pointerdown',function(e){ac();if(on&&e.target.closest&&e.target.closest('button,select,a')&&!e.target.closest('[data-nosfx]'))tone(520,0,.05,'square',.05,380)},true);
+  return{tone:tone,noise:noise,music:music,stopMusic:stopMusic,mount:mount,ac:ac,get on(){return on},get mus(){return mus},onMusic:null}
+})();
+
+const SND={
+ go(){SFX.tone(1900,0,.5,'sine',.1,1900);SFX.tone(1960,.01,.5,'sine',.08);for(let i=0;i<8;i++)SFX.noise(.6+i*.06,.05,.25,'bandpass',300,1)},
+ q(){SFX.tone(880,0,.08,'triangle',.12);SFX.tone(1175,.09,.12,'triangle',.12)},
+ right(){[784,988,1319].forEach((f,i)=>SFX.tone(f,i*.08,.2,'square',.09))},
+ wrong(){SFX.tone(160,0,.35,'sawtooth',.14,90);SFX.tone(150,.12,.3,'sawtooth',.1,80)},
+ timeout(){SFX.tone(110,0,.9,'sine',.3,70);SFX.noise(0,.5,.12,'lowpass',300,1)},
+ pull(){SFX.noise(0,.45,.22,'bandpass',420,7);SFX.noise(.12,.3,.15,'bandpass',620,9);SFX.tone(85,.35,.15,'sine',.3,45)},
+ tick(){SFX.tone(1250,0,.03,'square',.08)},
+ win(){[523,659,784,1047,784,1047,1319].forEach((f,i)=>{SFX.tone(f,i*.13,.28,'triangle',.16);SFX.tone(f/2,i*.13,.28,'square',.05)})},
+ lose(){[330,311,294,262].forEach((f,i)=>SFX.tone(f,i*.26,.4,'sawtooth',.09,f*.92))}};
+/* musik latar: tabuhan semangat (kick/snare/hat + bass pentatonik) */
+const BASS=[0,-1,3,-1,5,-1,3,0,-1,7,-1,5,3,-1,2,-1];
+SFX.onMusic=()=>SFX.music(.2,(n,t)=>{const k=n%16,fr=s=>110*Math.pow(2,s/12);
+ if(k%4==0){SFX.tone(150,t,.16,'sine',.3,48,1)}
+ if(k==4||k==12){SFX.noise(t,.12,.18,'bandpass',1800,.9,1)}
+ if(k%2==1)SFX.noise(t,.03,.07,'highpass',6000,1,1);
+ if(k==2||k==10||k==15)SFX.tone(520,t,.07,'triangle',.07,300,1);
+ if(BASS[k]>=0)SFX.tone(fr(BASS[k]),t,.22,'triangle',.12,0,1)});
+let tkIv=null;function stopTk(){clearInterval(tkIv)}
+
+const Q=[
+[1,"RAL adalah singkatan dari…",["Rancangan Acak Lengkap","Rancangan Acak Lokal","Rancangan Acak Lanjut","Rancangan Awal Lapang"],0],
+[1,"Rancangan yang cocok bila unit percobaan relatif homogen adalah…",["RAL","RAK","Petak terbagi","Bujur sangkar latin"],0],
+[1,"RAK mengelompokkan satuan percobaan berdasarkan…",["Keseragaman kondisi (blok)","Jumlah perlakuan","Warna benih","Jenis uji lanjut"],0],
+[1,"Tiga prinsip dasar rancangan percobaan adalah…",["Pengacakan, pengulangan, kontrol lokal","Pengacakan, pengukuran, kalibrasi","Replikasi, korelasi, regresi","Seleksi, mutasi, hibridisasi"],0],
+[1,"H0 pada ANOVA menyatakan bahwa…",["Semua rata-rata perlakuan sama","Semua rata-rata berbeda","Ragam sama dengan nol","Ada satu perlakuan terbaik"],0],
+[1,"Benih F1 hasil persilangan dua galur murni disebut…",["Hibrida","Klon","Mutan","Varietas bersari bebas"],0],
+[1,"Tujuan pengacakan perlakuan adalah…",["Menghindari bias dan menjamin galat bebas","Menambah jumlah perlakuan","Memperbesar rata-rata","Mengganti ulangan"],0],
+[1,"Derajat bebas perlakuan bila ada t perlakuan adalah…",["t − 1","t","t + 1","t(t − 1)"],0],
+[1,"Tanaman berikut yang menyerbuk sendiri adalah…",["Padi","Jagung","Kelapa","Bunga matahari"],0],
+[1,"Ulangan dalam percobaan berfungsi untuk…",["Menduga galat percobaan","Mengurangi perlakuan","Mengubah genotipe","Menghapus blok"],0],
+[2,"Derajat bebas galat RAL dengan t perlakuan dan r ulangan…",["t(r − 1)","(t − 1)(r − 1)","tr − 1","r − 1"],0],
+[2,"Derajat bebas galat pada RAK…",["(r − 1)(t − 1)","t(r − 1)","rt − 1","t − 1"],0],
+[2,"Kuadrat tengah (KT) dihitung dengan…",["JK dibagi db","JK dikali db","db dibagi JK","JK ditambah db"],0],
+[2,"F hitung pada ANOVA RAL adalah…",["KT perlakuan / KT galat","KT galat / KT perlakuan","JK perlakuan / JK galat","KT total / KT galat"],0],
+[2,"Jika F hitung > F tabel, maka…",["Tolak H0","Terima H0","Ulangi percobaan","Tambah blok"],0],
+[2,"Model linear RAL adalah…",["Yij = μ + τi + εij","Yij = μ + τi + βj + εij","Yij = μ + βj","Yij = τi × εij"],0],
+[2,"Model linear RAK adalah…",["Yij = μ + τi + βj + εij","Yij = μ + τi + εij","Yij = μ + εij","Yij = βj − εij"],0],
+[2,"Faktor koreksi (FK) pada RAL adalah…",["(ΣY)² / (r·t)","ΣY² / (r·t)","ΣY / (r·t)","(ΣY)² · r · t"],0],
+[2,"Rasio fenotipe F2 persilangan dihibrid (dominan penuh) adalah…",["9 : 3 : 3 : 1","3 : 1","1 : 2 : 1","1 : 1 : 1 : 1"],0],
+[2,"Silang balik (backcross) adalah persilangan F1 dengan…",["Salah satu induknya","Sesama F1","Spesies lain","Galur mutan"],0],
+[2,"Peluang anak aa dari persilangan Aa × Aa…",["25%","50%","75%","100%"],0],
+[2,"Koefisien keragaman (KK) dihitung dengan…",["√KTG / rata-rata × 100%","KTG / rata-rata","√KTP / rata-rata","JKG / JKT × 100%"],0],
+[2,"Heritabilitas arti luas (h²) adalah…",["σ²G / σ²P","σ²E / σ²P","σ²P / σ²G","σ²G × σ²E"],0],
+[3,"RAL dengan 5 perlakuan dan 4 ulangan. db galat = …",["15","16","19","20"],0],
+[3,"RAK dengan 4 perlakuan dan 3 blok. db galat = …",["6","8","9","11"],0],
+[3,"KT perlakuan = 24 dan KT galat = 4. F hitung = …",["6","20","96","0,17"],0],
+[3,"KT galat = 4 dan rata-rata umum = 40. KK = …",["5%","10%","2%","20%"],0],
+[3,"σ²G = 20 dan σ²P = 50. Heritabilitas h² = …",["0,4","0,6","2,5","0,7"],0],
+[3,"Respon seleksi R = h² × S. Jika h² = 0,5 dan S = 8, R = …",["4","16","8","0,06"],0],
+[3,"Uji silang (test cross) AaBb × aabb menghasilkan rasio…",["1 : 1 : 1 : 1","9 : 3 : 3 : 1","3 : 1","1 : 2 : 1"],0],
+[3,"Efisiensi relatif RAK terhadap RAL > 100% berarti…",["RAK lebih efisien","RAL lebih efisien","Keduanya sama","Percobaan gagal"],0],
+[3,"Pada rancangan petak terbagi, faktor yang butuh ketelitian lebih tinggi ditempatkan pada…",["Anak petak","Petak utama","Blok","Ulangan"],0],
+[3,"Asumsi ANOVA berikut yang BENAR adalah…",["Galat menyebar normal dan ragam homogen","Galat saling berkorelasi","Ragam antar perlakuan berbeda","Rata-rata galat = 1"],0],
+[3,"Keunggulan F1 dibanding rata-rata tetuanya disebut…",["Heterosis","Segregasi","Epistasis","Depresi silang dalam"],0],
+[3,"Hukum Hardy-Weinberg dinyatakan dengan…",["p² + 2pq + q² = 1","p + q = 2","p² − q² = 1","pq = 1"],0],
+[3,"Ragam fenotipe σ²P diuraikan menjadi…",["σ²G + σ²E","σ²G × σ²E","σ²G − σ²E","σ²E / σ²G"],0]];
+const $=id=>document.getElementById(id),rnd=n=>Math.floor(Math.random()*n),NM={A:'Tim Tunas 🌱',B:'Tim Hama 🐛'};
+let mode,isHost=false,ME={pid:'p'+Math.random().toString(36).slice(2,7),team:'A'},conns=[],bc,peer,hc,code,LIM=5;
+// ---------- transport ----------
+function send(m){setTimeout(()=>C.recv(m),0);if(mode=='tab')bc.postMessage(m);if(mode=='peer')conns.forEach(c=>c.open&&c.send(m))}
+function toHost(m){if(isHost)H.recv(m);else if(mode=='tab')bc.postMessage(m);else hc.send(m)}
+const HM=['join','ans'];
+// ---------- host (otoritatif) ----------
+const H={sc:{A:0,B:0},get ans(){return this.q[2][this.q[3]]},pos:0,round:0,closed:true,lock:{},used:[],pl:{},bot:0,
+ recv(m){if(m.t=='join'){if(!this.pl[m.pid]){const n=t=>Object.values(this.pl).filter(x=>x==t).length;this.pl[m.pid]=n('A')<=n('B')?'A':'B'}send({t:'you',to:m.pid,team:this.pl[m.pid]});this.lobby()}
+  else if(m.t=='ans'&&!this.closed&&!(this.lock[m.pid]>Date.now())){
+   if(this.opts[m.i]===this.ans){this.closed=true;clearTimeout(this.tmr);this.pos+=m.team=='A'?-1:1;this.sc[m.team]+=10*this.q[0];send({t:'r',pos:this.pos,team:m.team,ans:this.ans,sc:this.sc});
+    if(Math.abs(this.pos)>=LIM)setTimeout(()=>send({t:'end',w:m.team,sc:this.sc}),1300);else setTimeout(()=>this.next(),2200)}
+   else{this.closed=true;clearTimeout(this.tmr);const o=m.team=='A'?'B':'A';this.pos+=o=='A'?-1:1;send({t:'r',pos:this.pos,team:o,ans:this.ans,sc:this.sc,wrong:m.team});
+    if(Math.abs(this.pos)>=LIM)setTimeout(()=>send({t:'end',w:o,sc:this.sc}),1600);else setTimeout(()=>this.next(),3200)}}},
+ lobby(){const a=Object.values(this.pl);send({t:'lobby',a:a.filter(x=>x=='A').length,b:a.filter(x=>x=='B').length})},
+ start(){this.sc={A:0,B:0};this.pos=0;this.round=0;this.used=[];send({t:'go'});setTimeout(()=>this.next(),600)},
+ next(){const tier=this.round<4?1:this.round<9?2:3;let pool=Q.map((q,i)=>i).filter(i=>Q[i][0]==tier&&!this.used.includes(i));if(!pool.length){this.used=[];pool=Q.map((q,i)=>i).filter(i=>Q[i][0]==tier)}
+  const k=pool[rnd(pool.length)];this.used.push(k);this.q=Q[k];this.opts=[...this.q[2]].sort(()=>Math.random()-.5);this.lock={};this.closed=false;this.round++;
+  send({t:'q',sc:this.sc,q:this.q[1],o:this.opts,pos:this.pos,n:this.round,tier});this.tmr=setTimeout(()=>{if(!this.closed){this.closed=true;send({t:'r',pos:this.pos,team:null,ans:this.ans,sc:this.sc});setTimeout(()=>this.next(),2200)}},25000);
+  if(this.bot!==false&&mode=='bot'){const lv=this.bot,acc=[.45,.7,.9][lv]-(tier-1)*.08,d=([7,5,3][lv]+tier)*1000*(.6+Math.random()*.8);const rd=this.round;
+   setTimeout(()=>{if(!this.closed&&this.round==rd){const right=Math.random()<acc;let i=this.opts.indexOf(this.ans);if(!right)i=(i+1+rnd(3))%4;this.recv({t:'ans',pid:'bot',team:'B',i})}},d)}}};
+// ---------- klien ----------
+const C={recv(m){
+ if(m.to&&m.to!=ME.pid)return;
+ if(m.t=='you')ME.team=m.team;
+ else if(m.t=='lobby'){$('lc').textContent=`Tim Tunas: ${m.a} pemain · Tim Hama: ${m.b} pemain · Kamu: ${NM[ME.team]}`}
+ else if(m.t=='go'){$('lobby').style.display='none';$('game').style.display='block';buildPans();pull(0);$('msg').textContent=''}
+ else if(m.t=='q'){clearInterval(C.iv);$('q').innerHTML=`<small>SOAL ${m.n} · ${['','MUDAH','SEDANG','SULIT'][m.tier]}</small>`+m.q;$('msg').textContent='';
+  document.querySelectorAll('.pan button').forEach((b,k)=>{b.textContent='ABCD'[k%4]+'. '+m.o[k%4];b.disabled=false;b.style.background='';b.dataset.i=k%4});pull(m.pos);score(m.sc);
+  const t0=Date.now();C.iv=setInterval(()=>{$('tm').style.width=Math.max(0,100-(Date.now()-t0)/250)+'%'},100)}
+ else if(m.t=='lock'){document.querySelectorAll('.pan button').forEach(b=>{const own=mode=='local'?b.dataset.team==m.team:m.pid==ME.pid;if(own){b.disabled=true;setTimeout(()=>b.disabled=document.body.dataset.closed=='1',2500)}});if(m.pid==ME.pid||mode=='local')$('msg').textContent='❌ Salah! Tunggu 2,5 detik…'}
+ else if(m.t=='r'){document.body.dataset.closed='1';clearInterval(C.iv);document.querySelectorAll('.pan button').forEach(b=>b.disabled=true);pull(m.pos);score(m.sc);$('q').innerHTML+=`<div style="margin-top:8px;color:#0a7a2a">✅ Jawaban benar: <b>${m.ans}</b></div>`;
+  document.querySelectorAll('.pan button').forEach(b=>{if(b.textContent.slice(3)==m.ans)b.style.background='#4ade80'});
+  $('msg').textContent=m.wrong?`❌ ${NM[m.wrong]} salah! Jawaban benar: ${m.ans} → ${NM[m.team]} menarik tali`:m.team?`✅ ${NM[m.team]} benar! Jawaban: ${m.ans}`:`⏰ Waktu habis. Jawaban benar: ${m.ans}`}
+ else if(m.t=='end'){const w=m.w;score(m.sc);$('q').innerHTML=`🏆 ${NM[w]} MENANG!<br>Skor: ${m.sc.A} – ${m.sc.B}<br><button onclick="location.reload()">Main lagi</button>`;$('msg').textContent=''}
+ if(m.t=='q')document.body.dataset.closed='0'}};
+
+const _cr=C.recv;C.recv=function(m){if(m.to&&m.to!=ME.pid)return _cr.call(this,m);
+ const r=_cr.call(this,m),loc=mode=='local';
+ if(m.t=='go'){SND.go();if(SFX.mus)SFX.onMusic()}
+ else if(m.t=='q'){SND.q();stopTk();const t0=Date.now();tkIv=setInterval(()=>{const rem=25-(Date.now()-t0)/1000;if(rem<=5&&rem>0)SND.tick()},1000)}
+ else if(m.t=='r'){stopTk();if(!m.team)SND.timeout();else if(m.wrong)((loc||m.wrong==ME.team)?SND.wrong():SND.right());else((loc||m.team==ME.team)?SND.right():SND.wrong());setTimeout(SND.pull,260)}
+ else if(m.t=='end'){stopTk();SFX.stopMusic();(loc||m.w==ME.team)?SND.win():SND.lose()}
+ return r};
+SFX.mount(document.querySelector('.top'));
+function score(sc){if(sc)$('sc').innerHTML=`<span style="color:#8dff8d">🌱 Tunas: ${sc.A}</span><span style="color:#ff9a9a">🐛 Hama: ${sc.B}</span>`}
+function pull(p){const x=50+p*(47/LIM);$('fl').style.left=x+'%';$('ta').style.left=(x-24)+'%';$('tb').style.left=(x+2)+'%'}
+function buildPans(){const teams=mode=='local'?['A','B']:[ME.team];$('pans').innerHTML=teams.map(t=>`<div class="pan ${t}"><h3>${NM[t]}</h3>${[0,1,2,3].map(i=>`<button data-team="${t}" disabled></button>`).join('')}</div>`).join('');
+ document.querySelectorAll('.pan button').forEach((b,k)=>b.onclick=()=>toHost({t:'ans',pid:mode=='local'?b.dataset.team+'L':ME.pid,team:b.dataset.team,i:+b.dataset.i}))}
+document.addEventListener('keydown',e=>{const K={a:['A',0],s:['A',1],d:['A',2],f:['A',3],j:['B',0],k:['B',1],l:['B',2],';':['B',3]},N={1:0,2:1,3:2,4:3};let t,i;
+ if(mode=='local'&&K[e.key]){[t,i]=K[e.key]}else if(mode!='local'&&N[e.key]!==undefined){t=ME.team;i=N[e.key]}else return;
+ const b=[...document.querySelectorAll('.pan button')].find(x=>x.dataset.team==t&&+x.dataset.i==i);if(b&&!b.disabled)b.click()});
+// ---------- mode ----------
+function show(t){$('menu').style.display='none';$('lobby').style.display='block';$('lt').textContent=t}
+function go(m){mode=m;isHost=true;H.bot=m=='bot'?+$('lv').value:false;$('menu').style.display='none';LIM=5;
+ if(m=='bot'){ME.team='A'}else{ME.team='A'}H.start();}
+function rcode(){return Math.random().toString(36).slice(2,6).toUpperCase()}
+function host(m){mode=m;isHost=true;H.bot=false;code=rcode();ME.team='A';H.pl[ME.pid]='A';show('RUANG: '+code);$('sb').style.display='inline-block';
+ $('lj').textContent=m=='peer'?'Bagikan kode ini. Teman memilih "Online: Gabung" lalu memasukkan kode.':'Buka game di tab lain, pilih "Antar Tab: Gabung", masukkan kode.';
+ H.lobby();
+ if(m=='tab'){bc=new BroadcastChannel('tt13-'+code);bc.onmessage=e=>{if(HM.includes(e.data.t))H.recv(e.data)}}
+ else{peer=new Peer('tt13-'+code);peer.on('connection',c=>{conns.push(c);c.on('data',d=>H.recv(d))});peer.on('error',e=>$('lj').textContent='Gagal: '+e.type)}}
+function joinUI(m){mode=m;$('menu').style.display='none';$('lobby').style.display='block';$('lt').textContent='GABUNG RUANG';$('lj').innerHTML='<input id="ci" maxlength="4" placeholder="KODE"> <button onclick="join()">Gabung</button>'}
+function join(){code=$('ci').value.toUpperCase().trim();isHost=false;$('lc').textContent='Menyambung…';
+ if(mode=='tab'){bc=new BroadcastChannel('tt13-'+code);bc.onmessage=e=>{if(!HM.includes(e.data.t))C.recv(e.data)};toHost({t:'join',pid:ME.pid})}
+ else{peer=new Peer();peer.on('open',()=>{hc=peer.connect('tt13-'+code,{reliable:true});hc.on('open',()=>hc.send({t:'join',pid:ME.pid}));hc.on('data',d=>C.recv(d))});peer.on('error',e=>$('lc').textContent='Gagal: '+e.type)}}
+</script></body></html>
