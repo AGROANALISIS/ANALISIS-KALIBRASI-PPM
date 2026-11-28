@@ -1,0 +1,80 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kuis Agroteknologi 🌱</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Verdana,system-ui,sans-serif;color:#fff;background:linear-gradient(135deg,#2a1b7a 0%,#3b3fc4 55%,#1f6fd1 100%) fixed;display:flex;justify-content:center;padding:14px}
+.app{width:min(760px,100%)}.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+a.back{color:#dfe6ff;text-decoration:none;font-size:14px;background:#ffffff1f;padding:6px 12px;border-radius:999px}
+h1{font-size:clamp(20px,4vw,28px);margin:10px 0 2px}.sub{opacity:.8;font-size:13px;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.st{background:#ffffff1c;border:2px solid #ffffff33;border-radius:14px;padding:8px;text-align:center}
+.st b{display:block;font-size:22px}.st span{font-size:12px;opacity:.85}
+.card{background:linear-gradient(160deg,#ffffff26,#ffffff10);border:2px solid #ffd76a88;border-radius:20px;padding:18px;box-shadow:0 14px 40px #0006}
+.chip{display:inline-block;font-size:12px;background:#ffd76a;color:#3a2300;font-weight:800;border-radius:999px;padding:3px 10px}.no{float:right;font-size:12px;opacity:.8}
+#q{font-size:clamp(17px,3.2vw,22px);line-height:1.4;margin:12px 0 16px;font-weight:700}
+.opts{display:grid;gap:10px}.o{display:flex;gap:10px;align-items:center;text-align:left;font:inherit;font-size:clamp(14px,2.6vw,17px);color:#fff;background:#ffffff1f;border:2px solid #ffffff44;border-radius:14px;padding:12px 14px;cursor:pointer;transition:transform .12s,background .2s}
+.o:hover:not(:disabled){transform:translateX(4px);background:#ffffff33}.o i{font-style:normal;font-weight:900;background:#ffd76a;color:#3a2300;border-radius:8px;min-width:28px;height:28px;display:grid;place-items:center}
+.o.bad{background:#d32f2fcc;border-color:#ff8a80;animation:shake .4s}.o.ok{background:#2e9b4ecc;border-color:#9dffb0;animation:pulse .6s}.o:disabled{cursor:default}.o.bad:disabled{opacity:.75}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}@keyframes pulse{50%{transform:scale(1.04)}}
+#msg{min-height:30px;margin-top:14px;font-weight:800;font-size:18px;text-align:center}.nx{display:none;margin:10px auto 0;font:inherit;font-weight:800;font-size:17px;background:linear-gradient(#ffe27a,#ffb300);color:#3a2300;border:0;border-radius:999px;padding:12px 26px;cursor:pointer;box-shadow:0 6px 0 #a56d00}.nx.on{display:block}
+.tools{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}.tb{font:inherit;font-size:13px;color:#fff;background:#ffffff22;border:1px solid #fff4;border-radius:999px;padding:6px 12px;cursor:pointer}
+.candy{position:fixed;top:-40px;font-size:30px;pointer-events:none;z-index:50;animation:fall linear forwards}@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+.big{position:fixed;inset:0;display:none;place-items:center;pointer-events:none;z-index:40}.big.on{display:grid}.big div{font-size:clamp(28px,7vw,56px);font-weight:900;text-align:center;color:#ffe27a;text-shadow:0 4px 0 #7a1010,0 0 30px #ffb300;animation:pop 1.6s ease-out forwards}
+@keyframes pop{0%{transform:scale(.2);opacity:0}20%{transform:scale(1.15);opacity:1}80%{opacity:1}100%{transform:scale(1) translateY(-30px);opacity:0}}
+</style></head><body><div class="app">
+<div class="top"><a class="back" href="../index.html">← Beranda</a><div class="tools"><select class="tb" id="vs" title="Pilih suara perempuan Indonesia" style="max-width:250px"></select><button class="tb" id="snd">🔊 Suara: ON</button><button class="tb" id="rst">↺ Reset skor</button></div></div>
+<h1>🌱 Kuis Agroteknologi</h1><div class="sub">1000 soal acak seputar pertanian & agroteknologi. Jawab benar = 1 kemenangan + 1 permen 🍬 (suara bisa diganti di pojok kanan atas)</div>
+<div class="stats"><div class="st"><b id="w">0</b><span>🏆 Kemenangan</span></div><div class="st"><b id="c">0</b><span>🍬 Permen</span></div><div class="st"><b id="n">0</b><span>❓ Soal dijawab benar dari 1000</span></div></div>
+<div class="card"><span class="chip" id="tp"></span><span class="no" id="no"></span><div id="q"></div><div class="opts" id="opts"></div><div id="msg"></div><button class="nx" id="nx">Soal berikutnya ➜</button></div>
+</div><div class="big" id="big"><div></div></div>
+<script src="questions.js"></script>
+<script>
+const $=id=>document.getElementById(id),K='agroquiz_v1';let S={w:0,c:0,seen:[]},order=[],pos=0,cur=null,lock=false,sound=true;
+try{S=Object.assign(S,JSON.parse(localStorage.getItem(K)||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function newOrder(){const done=new Set(S.seen);let r=QUIZ.map((_,i)=>i).filter(i=>!done.has(QUIZ[i].id));if(!r.length){S.seen=[];save();r=QUIZ.map((_,i)=>i)}order=shuffle(r);pos=0}
+function stats(){$('w').textContent=S.w;$('c').textContent=S.c;$('n').textContent=S.seen.length}
+/* suara: ucapan (Web Speech) + efek bunyi */
+let ac;function beep(f,d,t,v){if(!sound)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=t||'sine';o.frequency.value=f;g.gain.value=v||.15;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.stop(ac.currentTime+d)}catch(e){}}
+/* ---- Suara perempuan Indonesia: natural, lembut, dan jelas ---- */
+let VOX=[],pref=null;
+try{pref=localStorage.getItem('agroquiz_voice')}catch(e){}
+function femaleScore(v){
+ const n=(v.name||'').toLowerCase(), l=(v.lang||'').toLowerCase();
+ if(!/^id(-|$)/i.test(l))return -100;
+ let score=20;
+ if(/female|perempuan|wanita|gadis|damayanti|google.*indonesia/i.test(n))score+=12;
+ if(/natural|online|neural/i.test(n))score+=8;
+ if(/microsoft|google/i.test(n))score+=3;
+ if(/compact|legacy/i.test(n))score-=3;
+ return score;
+}
+function loadVox(){
+ const all=window.speechSynthesis? speechSynthesis.getVoices():[];
+ VOX=all.filter(v=>/^id(-|$)/i.test(v.lang)).sort((a,b)=>femaleScore(b)-femaleScore(a));
+ const sel=$('vs');if(!sel)return;
+ sel.innerHTML='<option value="">Suara perempuan Indonesia (otomatis)</option>'+VOX.map(v=>'<option value="'+v.name.replace(/"/g,'&quot;')+'">'+v.name+' · '+v.lang+'</option>').join('');
+ if(pref&&VOX.some(v=>v.name===pref))sel.value=pref;
+ else{pref=null;try{localStorage.removeItem('agroquiz_voice')}catch(e){}}
+}
+function voice(){return (pref&&VOX.find(v=>v.name===pref))||VOX.find(v=>femaleScore(v)>=32)||VOX[0]||null}
+function say(t,o={}){return new Promise(res=>{
+ if(!sound||!window.speechSynthesis)return res();
+ speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t),v=voice();
+ u.lang='id-ID';if(v)u.voice=v;u.rate=o.r??.94;u.pitch=o.p??1.04;u.volume=1;
+ let done=false;const finish=()=>{if(!done){done=true;res()}};u.onend=finish;u.onerror=finish;speechSynthesis.speak(u);
+})}
+function clip(n,fallback){if(!sound)return;try{const a=new Audio('suara/'+n+'.mp3');a.volume=1;a.onerror=fallback;a.play().catch(fallback)}catch(e){fallback()}}
+function sayWin(){clip('benar',()=>say('Selamat! Kamu mendapatkan permen!',{r:.94,p:1.04}))}
+function sayBad(){clip('salah',()=>say('Belum tepat. Silakan coba lagi.',{r:.94,p:1.02}))}
+function candies(){const E=['🍬','🍭','🍫','🍬','🍭'];for(let i=0;i<34;i++){const e=document.createElement('div');e.className='candy';e.textContent=E[i%5];e.style.left=Math.random()*100+'vw';e.style.animationDuration=(1.8+Math.random()*1.8)+'s';e.style.animationDelay=Math.random()*.6+'s';document.body.appendChild(e);setTimeout(()=>e.remove(),4500)}}
+function banner(t){const b=$('big');b.firstChild.innerHTML=t;b.classList.remove('on');void b.offsetWidth;b.classList.add('on');setTimeout(()=>b.classList.remove('on'),1700)}
+function show(){if(pos>=order.length)newOrder();cur=QUIZ[order[pos]];lock=false;$('tp').textContent=cur.t;$('no').textContent='Soal #'+cur.id;$('q').textContent=cur.q;$('msg').textContent='';$('nx').classList.remove('on');
+ $('opts').innerHTML='';cur.o.forEach((o,i)=>{const b=document.createElement('button');b.className='o';b.innerHTML='<i>'+'ABCD'[i]+'</i><span></span>';b.lastChild.textContent=o;b.onclick=()=>pickOpt(i,b);$('opts').appendChild(b)})}
+function pickOpt(i,b){if(lock||b.disabled)return;
+ if(i===cur.a){lock=true;b.classList.add('ok');[...$('opts').children].forEach(x=>x.disabled=true);S.w++;S.c++;if(!S.seen.includes(cur.id))S.seen.push(cur.id);save();stats();
+  $('msg').innerHTML='🎉 Benar! +1 kemenangan, +1 permen 🍬';banner('🎉 Selamat!<br>Kamu mendapatkan permen 🍬');candies();beep(660,.15,'triangle');setTimeout(()=>beep(880,.15,'triangle'),130);setTimeout(()=>beep(1175,.3,'triangle'),270);sayWin();$('nx').classList.add('on');pos++;$('nx').focus()}
+ else{b.classList.add('bad');b.disabled=true;$('msg').textContent='❌ Belum tepat. Silakan coba lagi!';beep(180,.35,'sawtooth',.12);sayBad()}}
+$('nx').onclick=show;$('snd').onclick=()=>{sound=!sound;$('snd').textContent='🔊 Suara: '+(sound?'ON':'OFF');if(!sound&&window.speechSynthesis)speechSynthesis.cancel()};
+$('rst').onclick=()=>{if(confirm('Reset kemenangan dan permen?')){S={w:0,c:0,seen:[]};save();stats();newOrder();show()}};
+addEventListener('keydown',e=>{const k='abcd1234'.indexOf(e.key.toLowerCase());if(k>=0&&!lock){const i=k%4,b=$('opts').children[i];b&&pickOpt(i,b)}else if((e.key==='Enter'||e.key===' ')&&$('nx').classList.contains('on')){e.preventDefault();show()}});
+if(window.speechSynthesis){loadVox();speechSynthesis.onvoiceschanged=loadVox;setTimeout(loadVox,500)}$('vs').onchange=e=>{pref=e.target.value||null;try{pref?localStorage.setItem('agroquiz_voice',pref):localStorage.removeItem('agroquiz_voice')}catch(_){}say('Halo! Ini contoh suara perempuan berbahasa Indonesia. Selamat, kamu mendapatkan permen!',{r:.94,p:1.04})};stats();newOrder();show();
+</script></body></html>
