@@ -1,6 +1,0 @@
-SUARA MANUSIA ASLI (opsional)
-Taruh dua file rekaman di folder ini, maka game memakainya menggantikan suara robot browser:
-  benar.mp3  -> "Selamaaaat! Anda mendapatkan permen!"  (diteriakkan ceria)
-  salah.mp3  -> "Silakan coba lagi"
-Rekam sendiri dengan HP, atau buat dengan layanan text-to-speech suara perempuan Indonesia (mis. Google Cloud / ElevenLabs).
-Kalau file tidak ada, game otomatis memakai suara perempuan dari browser.
